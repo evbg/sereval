@@ -16,6 +16,9 @@ def sereval(
     return_results=True,
     show_params_in_results=False,
     show_results_with_error_only=False,
+    return_last_result_only=False,
+    map_results_lambda=None,
+    return_dict_lambda=None,
     _globals=None,
     **kwargs
 ):
@@ -79,6 +82,13 @@ def sereval(
     ret = {}
     if return_kwargs:
         ret.update({'kwargs': kwargs})
+    if return_last_result_only:
+        results = results[-1:]
+    if map_results_lambda:
+        try:
+            results = list(map(eval(map_results_lambda), results))
+        except Exception:
+            ret['map_results_lambda_error'] = traceback.format_exc()
     if return_results:
         if show_results_with_error_only:
             results_with_error = [r for r in results if r.get('error', None)]
@@ -88,4 +98,9 @@ def sereval(
             ret.update({'results': results})
     if return_results_accumulator:
         ret.update({'results_accumulator': results_accumulator})
+    if return_dict_lambda:
+        try:
+            return (eval("{}".format(return_dict_lambda)))(ret)
+        except Exception:
+            ret['return_dict_lambda_error'] = traceback.format_exc()
     return ret
